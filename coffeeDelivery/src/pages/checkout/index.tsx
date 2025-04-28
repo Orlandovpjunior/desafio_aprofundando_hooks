@@ -1,11 +1,33 @@
 import { useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { CartContext } from "../../context/CartContext";
 import { CheckoutContainer, AddressForm, PaymentOptions, SelectedCoffees, CoffeeCard, PriceDetails } from "./styles";
 import { MapPinLine, CurrencyDollar, Trash, CreditCard, Bank, Money } from '@phosphor-icons/react';
 
-export function Checkout() {
-  const { cartItems, increaseQuantity, decreaseQuantity, removeFromCart } = useContext(CartContext)
+interface AddressData {
+  cep: string
+  street: string
+  number: string
+  complement: string
+  district: string
+  city: string
+  uf: string
+  paymentMethod: "credit" | "debit" | "cash"
+}
 
+export function Checkout() {
+  const [address, setAddress] = useState<AddressData>({
+    cep: '',
+    street: '',
+    number: '',
+    complement: '',
+    district: '',
+    city: '',
+    uf: '',
+    paymentMethod: "credit",
+  })
+  const { cartItems, increaseQuantity, decreaseQuantity, removeFromCart } = useContext(CartContext)
+  const navigate = useNavigate()
   const totalItems = cartItems.reduce((total, item) => total + (parseFloat(item.price.replace(',', '.')) * item.quantity), 0)
   const deliveryFee = 3.5
   const totalOrder = totalItems + deliveryFee
@@ -14,7 +36,16 @@ export function Checkout() {
 
   function handleSelectPayment(method: "credit" | "debit" | "cash") {
     setSelectedPaymentMethod(method)
+    setAddress((state) => ({
+      ...state,
+      paymentMethod: method,
+    }))
   }
+  
+
+  function handleConfirmOrder() {
+    navigate('/success', { state: address })
+  }  
 
   return (
     <CheckoutContainer>
@@ -30,16 +61,56 @@ export function Checkout() {
             </div>
           </div>
 
-          <input type="text" placeholder="CEP" />
-          <input type="text" placeholder="Rua" />
+          <input
+            type="text"
+            placeholder="CEP"
+            value={address.cep}
+            onChange={(e) => setAddress({ ...address, cep: e.target.value })}
+          />
+
+          <input
+            type="text"
+            placeholder="Rua"
+            value={address.street}
+            onChange={(e) => setAddress({ ...address, street: e.target.value })}
+          />
+
           <div className="row">
-            <input type="text" placeholder="Número" />
-            <input type="text" placeholder="Complemento" />
+            <input
+              type="text"
+              placeholder="Número"
+              value={address.number}
+              onChange={(e) => setAddress({ ...address, number: e.target.value })}
+            />
+
+            <input
+              type="text"
+              placeholder="Complemento"
+              value={address.complement}
+              onChange={(e) => setAddress({ ...address, complement: e.target.value })}
+            />
           </div>
           <div className="row">
-            <input type="text" placeholder="Bairro" />
-            <input type="text" placeholder="Cidade" />
-            <input type="text" placeholder="UF" />
+            <input
+              type="text"
+              placeholder="Bairro"
+              value={address.district}
+              onChange={(e) => setAddress({ ...address, district: e.target.value })}
+            />
+
+            <input
+              type="text"
+              placeholder="Cidade"
+              value={address.city}
+              onChange={(e) => setAddress({ ...address, city: e.target.value })}
+            />
+
+            <input
+              type="text"
+              placeholder="UF"
+              value={address.uf}
+              onChange={(e) => setAddress({ ...address, uf: e.target.value })}
+            />
           </div>
         </AddressForm>
 
@@ -121,7 +192,7 @@ export function Checkout() {
               <span>R$ {totalOrder.toFixed(2).replace('.', ',')}</span>
             </div>
 
-            <button className="confirm">CONFIRMAR PEDIDO</button>
+            <button className="confirm" onClick={handleConfirmOrder}>CONFIRMAR PEDIDO</button>
           </PriceDetails>
         </SelectedCoffees>
       </div>
