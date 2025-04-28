@@ -1,7 +1,7 @@
 import { Route, Routes } from "react-router-dom";
-import { Home } from "./Home";
-import { ConfirmarPedido } from "./ConfirmarPedido";
-import { PedidoConfirmado } from "./PedidoConfirmado";
+import { Home } from "./pages/Home";
+import { ConfirmarPedido } from "./pages/ConfirmarPedido";
+import { PedidoConfirmado } from "./pages/PedidoConfirmado";
 
 
 export function Router() {
