@@ -26,7 +26,7 @@ export function Checkout() {
     uf: '',
     paymentMethod: "credit",
   })
-  const { cartItems, increaseQuantity, decreaseQuantity, removeFromCart } = useContext(CartContext)
+  const { cartItems, increaseQuantity, decreaseQuantity, removeFromCart, resetCart } = useContext(CartContext)
   const navigate = useNavigate()
   const totalItems = cartItems.reduce((total, item) => total + (parseFloat(item.price.replace(',', '.')) * item.quantity), 0)
   const deliveryFee = 3.5
@@ -44,6 +44,7 @@ export function Checkout() {
   
 
   function handleConfirmOrder() {
+    resetCart()
     navigate('/success', { state: address })
   }  
 
