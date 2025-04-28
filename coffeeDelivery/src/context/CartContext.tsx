@@ -1,4 +1,5 @@
-import { createContext, ReactNode, useState } from "react";
+import { createContext, ReactNode, useState, useEffect } from "react";
+import { produce } from "immer";
 
 interface CartItem {
   id: number;
@@ -22,51 +23,64 @@ interface CartContextProviderProps {
   children: ReactNode;
 }
 
+const CART_STORAGE_KEY = "coffeeDelivery:cartItems";
+
 export function CartContextProvider({ children }: CartContextProviderProps) {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    const storedCart = localStorage.getItem(CART_STORAGE_KEY)
+    if (storedCart) {
+      return JSON.parse(storedCart)
+    }
+    return []
+  });
+
+  useEffect(() => {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems))
+  }, [cartItems])
 
   function addToCart(item: CartItem) {
-    const itemAlreadyInCart = cartItems.find(
-      (cartItem) => cartItem.id === item.id
+    setCartItems((state) =>
+      produce(state, (draft) => {
+        const itemInCart = draft.find((cartItem) => cartItem.id === item.id)
+        if (itemInCart) {
+          itemInCart.quantity += item.quantity
+        } else {
+          draft.push(item)
+        }
+      })
     );
-
-    if (itemAlreadyInCart) {
-      setCartItems((state) =>
-        state.map((cartItem) =>
-          cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + item.quantity }
-            : cartItem
-        )
-      );
-    } else {
-      setCartItems((state) => [...state, item]);
-    }
   }
 
   function removeFromCart(id: number) {
-    setCartItems((state) => state.filter((cartItem) => cartItem.id !== id));
+    setCartItems((state) =>
+      produce(state, (draft) => {
+        const index = draft.findIndex((cartItem) => cartItem.id === id)
+        if (index >= 0) {
+          draft.splice(index, 1)
+        }
+      })
+    );
   }
 
   function increaseQuantity(id: number) {
     setCartItems((state) =>
-      state.map((cartItem) =>
-        cartItem.id === id
-          ? { ...cartItem, quantity: cartItem.quantity + 1 }
-          : cartItem
-      )
+      produce(state, (draft) => {
+        const item = draft.find((cartItem) => cartItem.id === id)
+        if (item) {
+          item.quantity++
+        }
+      })
     );
   }
 
   function decreaseQuantity(id: number) {
     setCartItems((state) =>
-      state.map((cartItem) =>
-        cartItem.id === id
-          ? {
-              ...cartItem,
-              quantity: cartItem.quantity > 1 ? cartItem.quantity - 1 : 1,
-            }
-          : cartItem
-      )
+      produce(state, (draft) => {
+        const item = draft.find((cartItem) => cartItem.id === id)
+        if (item && item.quantity > 1) {
+          item.quantity--
+        }
+      })
     );
   }
 
